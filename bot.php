@@ -2,7 +2,7 @@
  
 require __DIR__.'/../../vendor/autoload.php';
  
-$path = "https://api.telegram.org/bot6919832707:AAFYKk0RpgWI43_YakoOifJnj-QPFGON1rg/";
+$path = "https://api.telegram.org/bot6917767497:AAG6KBo_4a4ytus6toj4k8_xGIpsGmcTJqg/";
 $update = json_decode(file_get_contents("php://input"), TRUE); 
 
 $chatId = $update["message"]["chat"]["id"];
@@ -17,57 +17,70 @@ $horan_id=horanid($chatId, $first);
 $user=user($horan_id);
 $state = $user['state'];
 
+// Translator 
+require __DIR__.'/../../vendor/autoload.php';
+use Stichoza\GoogleTranslate\GoogleTranslate;
+$to = $user['lang'];
+$tr = new GoogleTranslate();
+$tr->setSource();
+$tr->setTarget($to);
 
     
+// Translate the texts for the buttons
+$mainMenuText = $tr->translate('Main Menu');
+$amharicText = $tr->translate('Amharic');
+$englishText = $tr->translate('English');
+$shareContactText = $tr->translate('Share Contact');
+$buyAlbumText = $tr->translate('Buy Album');
+$buyBookText = $tr->translate('Buy Book');
+$changeLanguageText = $tr->translate('Change Language');
+
 // ------------------------ Back Button -----------------------
 $back = json_encode(
     [
         'inline_keyboard' => [
             [
-                ['text' => '🧾 Main Menu', 'callback_data' => 'back']
-               
+                ['text' => "🧾 Main Menu", 'callback_data' => 'back']
             ]
         ]
     ]);  
-    
 
+$lang = json_encode(
+    [
+        'inline_keyboard' => [
+            [
+                ['text' => "🇪🇹 $amharicText", 'callback_data' => 'am'],
+            ],
+            [
+                ['text' => "🇬🇧 $englishText", 'callback_data' => 'en'],
+            ],
+        ]
+    ]);
 
-        
-    
-    
 $share_contact = json_encode(
     [
         'inline_keyboard' => [
             [
-                ['text' => '👤 Share Contact ', 'callback_data' => 'share_contact'],
-            
+                ['text' => "👤 $shareContactText", 'callback_data' => 'share_contact'],
             ]
         ]
-    ]);  
-    
-    
+    ]);
 
-    
 // ---------------------------- Menu Buttons-------------------
 $print = json_encode(
     [
         'inline_keyboard' => [
             [
-                ['text' => 'አልበም ይግዙ ', 'callback_data'=> 'buy_album']
-               
+                ['text' => "🎵 $buyAlbumText", 'callback_data'=> 'buy_album']
             ],
             [
-                 ['text' => 'መጽሀፍ ይግዙ', 'callback_data'=> 'buy_book'],  
-             ],
-             [
-                 
-            ['text' => 'ቋንቋ ይቅይሩ', 'callback_data'=> 'change_lang'], 
+                ['text' => "📖 $buyBookText", 'callback_data'=> 'buy_book'],  
+            ],
+            [
+                ['text' => "🌐 $changeLanguageText", 'callback_data'=> 'lang'], 
             ]
-           
         ]
     ]);
-
-
 // ************************   HOME      ****************************
  
 
@@ -76,12 +89,8 @@ if($message =="/start"){
      
         $msg1 = array(
                 'chat_id'=>$chatId, 
-                'caption'=>"
-🎧 <b>Tekeblonal Album</b>
-👤 AASTU ECSF Choir
-💿 10 songs
-
-አሁን ለመግዛት ከታች ያለውን ቁልፍ ይጫኑ፡",
+                'caption'=>$tr->translate("
+🎧 <b>አልበም ለመግዛት ከታች ያለውን <i> አልበሙን ይግዙ</i> የሚለውን ወይም <i> ቋንቋ ይቅይሩ</i> የሚለውን ምልክት ይጫኑ</b> 👇"),
                 'reply_markup' =>$print,
                   'disable_web_page_preview' => false,
                 'parse_mode' => 'HTML', 
@@ -93,7 +102,22 @@ if($message =="/start"){
   //  update_input("None", $chatId);
 }
 
+//************************   CHANGE BOT LANGUAGE  ****************************
+ 
 
+if($message =="/change"){ 
+    if($to=="am"){$current="Amharic"; }
+    if($to=="en"){$current="English"; } 
+ 
+    $cha= 
+        array(
+            'chat_id' => $chatId, 
+            'text' =>"🔀 Input Language:\n \t\t\t\t\t\t\t\t\t \t - Automatically Detected\nℹ️ Current Output:  
+                ".$current."\n\nSelect Output  Language 👇", 
+            'parse_mode' => 'HTML',
+            'disable_web_page_preview' => false, 'reply_markup' =>$print);
+        send("sendMessage", $cha); 
+}
 
 // ************************ UPLOAD SCREENSHOT IMAGE ****************************
 if (isset($update['message']['photo'][1]['file_id']) && $state == "photo") {
@@ -125,7 +149,7 @@ if (isset($update['message']['photo'][1]['file_id']) && $state == "photo") {
 
     if ($file_path_json && isset($file_path_json['result']['file_path'])) {
         $file_path = $file_path_json['result']['file_path'];
-        $filepath = "https://api.telegram.org/file/bot6919832707:AAFYKk0RpgWI43_YakoOifJnj-QPFGON1rg/" . $file_path;
+        $filepath = "https://api.telegram.org/file/bot6917767497:AAG6KBo_4a4ytus6toj4k8_xGIpsGmcTJqg/" . $file_path;
 
 
         send("sendMessage", $wait);
@@ -202,18 +226,41 @@ function isValidImage($url)
     return $imageSize !== false && strpos($imageSize['mime'], 'image') === 0;
 }
 
+//************************   SEND NAME **********************************
+if ($message != "" && $message != "/cancel" && $message != "/start"  && $state == "name") {
+    update_user("fname", $message, $chatId);
+    
+    $name = array(
+        'chat_id' => $chatId,
+        'text' => "✅ Registered!",
+        'parse_mode' => 'HTML'
+    );
+    send("sendMessage", $name);
+
+ $msg= 
+        array(
+            'chat_id' => $chatId, 
+            'text' =>$tr->translate("እባክዎትን ከዚህ በታች ካሉት አማራጮች በአንዱ ስልክ ቁጥርዎን ይላኩ።
+1.  በሚከተለው መልክ ፅፈው ይላኩ +2519xxxxxxxx/+2517xxxxxxxx ወይም 09xxxxxxxx/07xxxxxxxx 
+
+አሁን የሚሰራውን ተግባር ለመሰረዝ /cancel ብለው ይላኩ"), 
+            'parse_mode' => 'HTML', 
+            'disable_web_page_preview' => false);
+    send("sendMessage", $msg);  
+     
+  update_user("state", "phone", $chatId);
+}
+
 //************************   SHARE PHONE NUMBER **********************************
 if ($message != "" && $message != "/cancel" && $message != "/start"  && $state == "phone") {
     update_user("phone", $message, $chatId);
-    
+     update_user("state", "none", $chatId);
     $phone = array(
         'chat_id' => $chatId,
         'text' => "✅Phone Number Registered!",
         'parse_mode' => 'HTML'
     );
     send("sendMessage", $phone);
-
- 
      
     send_account_detail($chatId);
 }
@@ -245,21 +292,25 @@ if(isset($update['callback_query'])){
     $chatId=$callback_query["message"]['chat']['id'];
     
     
-    $joinchannel= json_encode(
+    $joinchannel1= json_encode(
     [
         'inline_keyboard' => [
             [
-                ['text' => 'ይቀላቀሉ 🎉 ', 'url' => 'https://t.me/innovate_aastu'],
+                ['text' => 'ይቀላቀሉ 🎉 ', 'url' => 'https://t.me/+0Wp1W7jd0CY5ZjA0'],
             ],
         ]
     ]);
     
-     $loading = array(
-             'chat_id' => $chatId,
-            'text' => "Loading Please wait....",
-            'parse_mode' => 'HTML',
-        );
-        send("sendMessage", $loading);
+      $joinchannel2= json_encode(
+    [
+        'inline_keyboard' => [
+            [
+                ['text' => 'ይቀላቀሉ 🎉 ', 'url' => 'https://t.me/+CTxFX8WbHTMzYTFk'],
+            ],
+        ]
+    ]);
+    
+
         
     // Assuming you have the user ID in the message caption
     $userID = extractUserIDFromCaption($callback_query["message"]['caption']);
@@ -284,11 +335,11 @@ if(isset($update['callback_query'])){
         send("sendMessage", $rejected);
         
     }
-     
+    
      
     if ($data == "confirm") {
         // Update user
-        update_user("buy_album", "yes", $userID);
+      
         // You can also send a confirmation message to the admin
           $confirmationMsg = array(
              'chat_id' => $chatId,
@@ -297,52 +348,159 @@ if(isset($update['callback_query'])){
         );
         send("sendMessage", $confirmationMsg);
         
-        $notificationR = array(
-             'chat_id' => $userID,
-            'text' => "ክፍያዎ በተሳካ ሁኔታ ተረጋግጦአል። ወደ ፕራይቬት ቻናሉ ከታች ያለውን በተን በመጫን ይግቡ።",
-            'parse_mode' => 'HTML',
-            'reply_markup' => $joinchannel,
-        );
-        send("sendMessage", $notificationR);
+        $user2 = getUserByID($userID) ;
+        if($user2['order_type'] == "book") {
+            
+              update_user("buy_book", "yes", $userID);
+            
+            $notificationR = array(
+                'chat_id' => $userID,
+                'text' => "ክፍያዎ በተሳካ ሁኔታ ተረጋግጦአል። ወደ ፕራይቬት ቻናሉ ከታች ያለውን በተን በመጫን ይግቡ።",
+                'parse_mode' => 'HTML',
+                'reply_markup' => $joinchannel2,
+            );
+            send("sendMessage", $notificationR);
+              update_order($userID, "book");
+            
+        }
+        else{
+            
+              update_user("buy_album", "yes", $userID);
+            
+            $notificationR = array(
+                 'chat_id' => $userID,
+                'text' => "ክፍያዎ በተሳካ ሁኔታ ተረጋግጦአል። ወደ ፕራይቬት ቻናሉ ከታች ያለውን በተን በመጫን ይግቡ።",
+                'parse_mode' => 'HTML',
+                'reply_markup' => $joinchannel1,
+            );
+            send("sendMessage", $notificationR);
+              update_order($userID, "album");
+        }
         
         
     }
     
+    if ($data == "back"){
+    
+
+         $delete1=  array(
+            'chat_id' => $chatId, 
+            'message_id' =>$msg);
+                send("deleteMessage", $delete1); 
+         update_user("state", "start", $chatId); 
+     
+        $msg1 = array(
+                'chat_id'=>$chatId, 
+                'caption'=>$tr->translate("ወደ ማውጫ ለመመለስ /start የምለውን ይጫኑ 
+
+👉 /start"),
+               
+                  'disable_web_page_preview' => false,
+                'parse_mode' => 'HTML', 
+                'photo'=>new CURLFile("tekeblonal_cover.jpg"),
+       );
+       send("sendPhoto", $msg1);
+    }
      
     if($data=="buy_album"){
+        
+             $loading = array(
+             'chat_id' => $chatId,
+           'text' => $tr->translate("🙏 አልበሙን ለመግዛት ስለወሰኑ እናመሰግናለን፣ እባክዎ ከታች እንደተመሩት ይከተሉ።"),
+            'parse_mode' => 'HTML',
+        );
+        send("sendMessage", $loading);
+        
+        
 $msg= 
         array(
             'chat_id' => $chatId, 
-            'text' =>"እባክዎትን ከዚህ በታች ካሉት አማራጮች በአንዱ ስልክ ቁጥርዎን ይላኩ።
-1.  የመለያ ስልክ ቁጥርዎን ለማጋራት ከታች \"Share contact\" የሚለውን ቁልፍ ይጫኑ ወይም 
-2.  በሚከተለው መልክ ፅፈው ይላኩ +2519xxxxxxxx/+2517xxxxxxxx ወይም 09xxxxxxxx/07xxxxxxxx 
-
-አሁን የሚሰራውን ተግባር ለመሰረዝ /cancel ብለው ይላኩ", 
+            'text' =>$tr->translate("እባክዎትን ሙሉ ስሞትን ፅፈው ይላኩ\n
+አሁን የሚሰራውን ተግባር ለመሰረዝ /cancel ብለው ይላኩ
+"), 
             'parse_mode' => 'HTML', 
             'disable_web_page_preview' => false);
     send("sendMessage", $msg); 
+     update_user("state", "name", $chatId);
+     
+     
     update_user("order_type", "album", $chatId);
-    update_user("state", "phone", $chatId);
+   
     
 }
 
 
    if($data=="buy_book"){
+    $loading = array(
+             'chat_id' => $chatId,
+           'text' => $tr->translate("🙏 አልበሙን ለመግዛት ስለወሰኑ እናመሰግናለን፣ እባክዎ ከታች እንደተመሩት ይከተሉ።"),
+            'parse_mode' => 'HTML',
+        );
+        send("sendMessage", $loading);
+        
+        
 $msg= 
         array(
             'chat_id' => $chatId, 
-            'text' =>"እባክዎትን ከዚህ በታች ካሉት አማራጮች በአንዱ ስልክ ቁጥርዎን ይላኩ።
-1.  የመለያ ስልክ ቁጥርዎን ለማጋራት ከታች \"Share contact\" የሚለውን ቁልፍ ይጫኑ ወይም 
-2.  በሚከተለው መልክ ፅፈው ይላኩ +2519xxxxxxxx/+2517xxxxxxxx ወይም 09xxxxxxxx/07xxxxxxxx 
-
-አሁን የሚሰራውን ተግባር ለመሰረዝ /cancel ብለው ይላኩ", 
+            'text' =>$tr->translate("እባክዎትን ሙሉ ስሞትን ፅፈው ይላኩ\n
+አሁን የሚሰራውን ተግባር ለመሰረዝ /cancel ብለው ይላኩ
+"), 
             'parse_mode' => 'HTML', 
             'disable_web_page_preview' => false);
     send("sendMessage", $msg); 
-    update_user("order_type", "book", $chatId);
-    update_user("state", "phone", $chatId);
+    update_user("state", "name", $chatId);
+     
+    update_user("order_type", "book", $chatId); 
     
 }
+
+if($data=="en"){
+        
+        update_lang('en',$chatId);
+      
+        $tr->setTarget('en');
+        $to = 'en';
+        $edit= array(
+             
+            'chat_id' => $chatId, 
+            'text' =>$tr->translate("✅ Successful!\nYour output language changed to: English\n\nወደ ማውጫ ለመመለስ /start የምለውን ይጫኑ 
+
+👉 /start"),
+            'message_id' =>$msg);
+        send("editMessageText", $edit);
+      
+         
+    }
+if($data=="am"){
+        
+        update_lang('am',$chatId);
+        
+        $tr->setTarget('am');
+          $to = 'am';
+        $edit= array(
+           
+            'chat_id' => $chatId, 
+            'text' =>$tr->translate("✅ Successful!\nYour output language changed to: Amharic\n\nወደ ማውጫ ለመመለስ /start የምለውን ይጫኑ 
+
+👉 /start"),
+            'message_id' =>$msg);
+        send("editMessageText", $edit);
+         
+    }
+    
+  if($data=="lang"){
+    if($to =="am"){$current="Amharic"; }
+    if($to =="en"){$current="English"; }
+    $cha= 
+        array(
+            'chat_id' => $chatId, 
+             'text' =>"🔀 ️ Current Language:  
+                ".$current."\n\nSelect Bot Language 👇", 
+            'parse_mode' => 'HTML',
+            'disable_web_page_preview' => false, 'reply_markup' =>$lang);
+        send("sendMessage", $cha); 
+}
+    
 }
 
 
@@ -389,38 +547,23 @@ function send_wating_msg($chatId){
 
 function send_account_detail($chatId){
     
+   
+
+
      $msg = array(
         'chat_id' => $chatId, 
-        'text' =>"ከታች ባሉት የባንክ አማራጮች አንዱን መርጠው 200 ብር ያስተላልፉ። ከዚህም በኃላ የከፍሉበትን ባንክ ያስገቡበትን ደረሰኝ(screenshot) ፎቶ ይላኩ፡-
-<b>1. የአቢሲንያ ባንክ</b>
-አበባይ ሺበሺ
-አካውንት ቁጥር፡ 21348384
+        'text' =>("ከታች ባሉት የባንክ አማራጮች አንዱን መርጠው 200 ብር ያስተላልፉ። ከዚህም በኃላ የከፍሉበትን ባንክ ያስገቡበትን ደረሰኝ(screenshot) ፎቶ ይላኩ፡-
 
-<b>2. ብርሃን ባንክ</b>
-ጥሩሰው ሺበሺ
-አካውንት ቁጥር፡ 1010824471510
+Please pay 200 Birr using one of the bank accounts below and send us the screenshot.
 
-<b>3. የኢትዮጵያ ንግድ ባንክ</b>
-ሸዋንግዛው ሺበሺ
-አካውንት ቁጥር፡ 1000160753092
+#Name: <b>Ethiopia Full Gospel Tewodros Square Full Gospel Building Construction
 
-<b>4. ዳሽን ባንክ</b>
-አበባይ ሺበሺ
-አካውንት ቁጥር፡ 5306799319021
+🏦 Account Numbers
+CBE:  1000595710646
+OR
+Birhan Bank: 1600580011529  </b>
 
-<b>5. ደቡብ ግሎባል ባንክ</b>
-ጥሩሰው ሺበሺ
-አካውንት ቁጥር፡ 1697311699011
-
-<b>6. አንበሳ ባንክ</b>
-ሸዋንግዛው ሺበሺ
-አካውንት ቁጥር፡ 00310145999
-
-<b>7. ቴሌብር </b>
-ሸዋንግዛው ሺበሺ
-አካውንት ቁጥር፡ +251919912366
-
-አሁን የሚሰራውን ተግባር ለመሰረዝ /cancel ብለው ይላኩ", 
+አሁን የሚሰራውን ተግባር ለመሰረዝ /cancel ብለው ይላኩ"),
 
         'parse_mode' => 'HTML', );
 
@@ -440,6 +583,38 @@ function update_user($key, $value, $chatId){
 }
 
 
+
+function update_order($chatId, $type) {
+    // Database connection
+    $db = mysqli_connect('localhost', 'gujisoft_root', 'Zwh~KuUAwIpU', 'gujisoft_bots');
+    
+    // Prepare statement to avoid SQL injection
+    $stmt = $db->prepare("SELECT id FROM mezmur_album_orders WHERE chatid = ? AND type = ?");
+    $stmt->bind_param("ss", $chatId, $type); // 'ss' denotes two string parameters
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result && $result->num_rows > 0) {
+        $d = $result->fetch_assoc();
+        $row_id = $d['id'];
+
+        // Prepare statement for update
+        $updateStmt = $db->prepare("UPDATE mezmur_album_orders SET state = 'paid' WHERE id = ?");
+        $updateStmt->bind_param("i", $row_id); // 'i' denotes integer parameter
+        $updateStmt->execute();
+
+        if ($updateStmt->error) {
+            // Handle error
+        }
+    } else {
+        // Handle case where no record is found or query fails
+    }
+
+    // Close statements and connection
+    $stmt->close();
+    $updateStmt->close();
+    $db->close();
+}
 
 
 function add_new_order($image, $chatId, $image_name){
@@ -461,6 +636,7 @@ function add_new_order($image, $chatId, $image_name){
 }
 
 function sendAdmin($chatId, $name, $phone, $type, $image, $userID) {
+   
 $confirm = json_encode(
     [
         'inline_keyboard' => [
@@ -473,8 +649,55 @@ $confirm = json_encode(
 
     $photo_id = "mezmur_album_screenshots/$image";
     $date = date('Y-m-d');
-    $with_profile = [
-        'chat_id' => "6800563832",  // admin chat id
+
+// Nahom ID 'chat_id' => "6800563832", 
+// Selam ID 313721341
+// Zeri ID 343598731
+
+
+// Send to Zeru  
+$with_profile = [
+        'chat_id' => "343598731",  // admin chat id
+        'caption' => "🎉 New Order From User
+Name:  $name
+Phone: $phone
+Order Type: $type
+Date: $date
+User ID: $userID",
+        'parse_mode' => 'HTML',
+        'reply_markup' => $confirm,
+        'disable_web_page_preview' => false,
+        
+        'photo' => new CURLFile($photo_id),
+    ];
+
+    send2("sendPhoto", $with_profile);
+
+
+
+// Send to Selam  
+$with_profile = [
+        'chat_id' => "313721341",  // admin chat id
+        'caption' => "🎉 New Order From User
+Name:  $name
+Phone: $phone
+Order Type: $type
+Date: $date
+User ID: $userID",
+        'parse_mode' => 'HTML',
+        'reply_markup' => $confirm,
+        'disable_web_page_preview' => false,
+        
+        'photo' => new CURLFile($photo_id),
+    ];
+
+    send2("sendPhoto", $with_profile);
+
+ 
+    
+// Gemechis   for testing only  
+$with_profile = [
+        'chat_id' => "1468513798",  // admin chat id
         'caption' => "🎉 New Order From User
 Name:  $name
 Phone: $phone
@@ -494,7 +717,7 @@ User ID: $userID",
 
 function send2($method, $data)
 {  
-    $url = "https://api.telegram.org/bot6919832707:AAFYKk0RpgWI43_YakoOifJnj-QPFGON1rg/".$method;
+    $url = "https://api.telegram.org/bot6917767497:AAG6KBo_4a4ytus6toj4k8_xGIpsGmcTJqg/".$method;
     if (!$curld = curl_init()) {
         exit;
     }
@@ -529,7 +752,13 @@ function user($hid){
     return $user;
 }
 
-
+function getUserByID($userID){
+    $db = mysqli_connect('localhost', 'gujisoft_root', 'Zwh~KuUAwIpU', 'gujisoft_bots');
+    $user_check_query = "SELECT * FROM mezmur_album_bot WHERE chatid='$userID'";
+    $result = mysqli_query($db, $user_check_query);
+    $user = mysqli_fetch_assoc($result);
+    return $user;
+}
 
 
 
@@ -542,7 +771,7 @@ function horanid($chatId,$first){
     if($found!=""){return $found;}
     
     else{
-        $query = "INSERT INTO mezmur_album_bot (chatid, fname) VALUES ('$chatId','$first')";
+        $query = "INSERT INTO mezmur_album_bot (chatid, fname, lang) VALUES ('$chatId','$first', 'am')";
         mysqli_query($db, $query);
         if($chatId!=""){
             
@@ -561,7 +790,7 @@ function horanid($chatId,$first){
 
 function send($method, $data)
 {  
-    $url = "https://api.telegram.org/bot6919832707:AAFYKk0RpgWI43_YakoOifJnj-QPFGON1rg/".$method;
+    $url = "https://api.telegram.org/bot6917767497:AAG6KBo_4a4ytus6toj4k8_xGIpsGmcTJqg/".$method;
     if (!$curld = curl_init()) {
         exit;
     }
