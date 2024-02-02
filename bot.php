@@ -2,7 +2,7 @@
  
 require __DIR__.'/../../vendor/autoload.php';
  
-$path = "https://api.telegram.org/bot6917767497:AAG6KBo_4a4ytus6toj4k8_xGIpsGmcTJqg/";
+$path = "API_TOKEN_HERE";
 $update = json_decode(file_get_contents("php://input"), TRUE); 
 
 $chatId = $update["message"]["chat"]["id"];
@@ -149,7 +149,7 @@ if (isset($update['message']['photo'][1]['file_id']) && $state == "photo") {
 
     if ($file_path_json && isset($file_path_json['result']['file_path'])) {
         $file_path = $file_path_json['result']['file_path'];
-        $filepath = "https://api.telegram.org/file/bot6917767497:AAG6KBo_4a4ytus6toj4k8_xGIpsGmcTJqg/" . $file_path;
+        $filepath = "https://api.telegram.org/file/API_TOKEN_HERE" . $file_path;
 
 
         send("sendMessage", $wait);
@@ -573,7 +573,7 @@ Birhan Bank: 1600580011529  </b>
 
 
 function update_user($key, $value, $chatId){
-    $db = mysqli_connect('localhost', 'gujisoft_root', 'Zwh~KuUAwIpU', 'gujisoft_bots');
+    $db = mysqli_connect('localhost', 'root', '', 'your_db_name');
     $user_check_query = "SELECT id FROM mezmur_album_bot WHERE chatid='$chatId'";
     $result = mysqli_query($db, $user_check_query);
     $d = mysqli_fetch_assoc($result);
@@ -586,7 +586,7 @@ function update_user($key, $value, $chatId){
 
 function update_order($chatId, $type) {
     // Database connection
-    $db = mysqli_connect('localhost', 'gujisoft_root', 'Zwh~KuUAwIpU', 'gujisoft_bots');
+    $db = mysqli_connect('localhost', 'root', '', 'your_db_name');
     
     // Prepare statement to avoid SQL injection
     $stmt = $db->prepare("SELECT id FROM mezmur_album_orders WHERE chatid = ? AND type = ?");
@@ -618,7 +618,7 @@ function update_order($chatId, $type) {
 
 
 function add_new_order($image, $chatId, $image_name){
-    $db = mysqli_connect('localhost', 'gujisoft_root', 'Zwh~KuUAwIpU', 'gujisoft_bots');
+    $db = mysqli_connect('localhost', 'root', '', 'your_db_name');
     $user_check_query = "SELECT * FROM mezmur_album_bot WHERE chatid='$chatId'";
     $result = mysqli_query($db, $user_check_query);
     $user = mysqli_fetch_assoc($result);
@@ -626,7 +626,7 @@ function add_new_order($image, $chatId, $image_name){
     $phone = $user['phone'];
     $type = $user['order_type'];
     $name =$user['fname'];
-    $db = mysqli_connect('localhost', 'gujisoft_root', 'Zwh~KuUAwIpU', 'gujisoft_bots');
+    $db = mysqli_connect('localhost', 'root', '', 'your_db_name');
     $query2 = "INSERT INTO mezmur_album_orders (chatid,name,phone,type,image) VALUES('$chatId','$name', '$phone', '$type', '$image')";
     mysqli_query($db, $query2);
     
@@ -717,7 +717,7 @@ User ID: $userID",
 
 function send2($method, $data)
 {  
-    $url = "https://api.telegram.org/bot6917767497:AAG6KBo_4a4ytus6toj4k8_xGIpsGmcTJqg/".$method;
+    $url = "API_TOKEN_HERE".$method;
     if (!$curld = curl_init()) {
         exit;
     }
@@ -733,19 +733,19 @@ function send2($method, $data)
 
 //************************   BACK END   ****************************
 function update_lang($value, $chatId){
-    $db = mysqli_connect('localhost', 'gujisoft_root', 'Zwh~KuUAwIpU', 'gujisoft_bots');
+    $db = mysqli_connect('localhost', 'root', '', 'your_db_name');
     $user_check_query = "SELECT id FROM mezmur_album_bot WHERE chatid='$chatId'";
     $result = mysqli_query($db, $user_check_query);
     $d = mysqli_fetch_assoc($result);
     $row_id= $d['id'];
-    $db = mysqli_connect('localhost', 'gujisoft_root', 'Zwh~KuUAwIpU', 'gujisoft_bots');
+    $db = mysqli_connect('localhost', 'root', '', 'your_db_name');
     $update="UPDATE mezmur_album_bot SET lang='$value' WHERE id='$row_id' ";
     mysqli_query($db, $update);
 }
 
 
 function user($hid){
-    $db = mysqli_connect('localhost', 'gujisoft_root', 'Zwh~KuUAwIpU', 'gujisoft_bots');
+    $db = mysqli_connect('localhost', 'root', '', 'your_db_name');
     $user_check_query = "SELECT * FROM mezmur_album_bot WHERE id='$hid'";
     $result = mysqli_query($db, $user_check_query);
     $user = mysqli_fetch_assoc($result);
@@ -753,7 +753,7 @@ function user($hid){
 }
 
 function getUserByID($userID){
-    $db = mysqli_connect('localhost', 'gujisoft_root', 'Zwh~KuUAwIpU', 'gujisoft_bots');
+    $db = mysqli_connect('localhost', 'root', '', 'your_db_name');
     $user_check_query = "SELECT * FROM mezmur_album_bot WHERE chatid='$userID'";
     $result = mysqli_query($db, $user_check_query);
     $user = mysqli_fetch_assoc($result);
@@ -763,7 +763,7 @@ function getUserByID($userID){
 
 
 function horanid($chatId,$first){
-    $db = mysqli_connect('localhost', 'gujisoft_root', 'Zwh~KuUAwIpU', 'gujisoft_bots');
+    $db = mysqli_connect('localhost', 'root', '', 'your_db_name');
     $user_check_query = "SELECT id FROM mezmur_album_bot WHERE chatid='$chatId'";
     $result = mysqli_query($db, $user_check_query);
     $d = mysqli_fetch_assoc($result);
@@ -776,7 +776,7 @@ function horanid($chatId,$first){
         if($chatId!=""){
             
         }
-        $db = mysqli_connect('localhost', 'gujisoft_root', 'Zwh~KuUAwIpU', 'gujisoft_bots');
+        $db = mysqli_connect('localhost', 'root', '', 'your_db_name');
         $user_check_query = "SELECT id FROM mezmur_album_bot WHERE chatid='$chatId'";
         $result = mysqli_query($db, $user_check_query);
         $d = mysqli_fetch_assoc($result);
@@ -790,7 +790,7 @@ function horanid($chatId,$first){
 
 function send($method, $data)
 {  
-    $url = "https://api.telegram.org/bot6917767497:AAG6KBo_4a4ytus6toj4k8_xGIpsGmcTJqg/".$method;
+    $url = "API_TOKEN_HERE".$method;
     if (!$curld = curl_init()) {
         exit;
     }
